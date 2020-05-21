@@ -15,11 +15,11 @@ const inputNode = document.getElementById('session_form_name');
 inputNode.setAttribute('value', Math.random().toString(36).substring(7)); // TODO: validation
 
 const submitNode = document.getElementById('sesssion_form_btn');
-submitNode.addEventListener('click', () => {
+submitNode.addEventListener('click', (e) => {
 	// on click send signal to bgscript
 	bgUpdateStateUI({
 		actionType: 'START_SESSION',
-		sessionName: inputNode.getAttribute('value'),
+		sessionName: inputNode.value,
 	});
 });
 
@@ -42,9 +42,11 @@ function updateUI() {
 		// there is no currenSession so user can opt to start the show
 		formNode.style.display = 'block';
 		detachNode.style.display = 'none';
+		sessionListNode.style.display = 'block';
 	} else {
 		formNode.style.display = 'none';
 		detachNode.style.display = 'block';
+		sessionListNode.style.display = 'none';
 		detachNode.setAttribute('value', state.currentSessionName + ' dettach');
 	}
 
@@ -58,6 +60,13 @@ function updateUI() {
 function button(txt) {
 	const btnNode = document.createElement('button');
 	btnNode.innerText = txt;
+
+	btnNode.addEventListener('click', () => {
+		bgUpdateStateUI({
+			actionType: 'START_SESSION',
+			sessionName: txt,
+		});
+	});
 
 	return btnNode;
 }

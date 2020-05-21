@@ -1,41 +1,76 @@
+// data structure to maintain state
 let state = {
 	currentSessionName: null,
 	sessions: [],
+	tabs: [],
 };
-// chrome.storage.sync.set({ xyz: 'xyz' });
 
+// on script start
 // get locally stored sessions
 chrome.storage.local.get(['sessions'], (result) => {
+	console.info('fetching data from storage', result);
 	if (result.sessions) {
 		state.sessions = result.sessions;
 	}
 });
 
-let tabs = [];
 function appendCreatedTab(tab) {
-	tabs.push(tab);
-	console.log(tabs);
+	state.tabs.push(tab);
+	console.info('new tab created', tab);
 }
 
 function removeTab(tabId) {
-	tabs = tabs.filter((tab) => tab.id !== tabId);
-	console.log(tabs);
+	state.tabs = state.tabs.filter((tab) => tab.id !== tabId);
+	console.info('tab removed', tabId);
 }
 
 function updateTab(tabId, changeLog, tab) {
-	tabs = tabs.map((tab_) => (tab_.id === tabId ? tab : tab_));
-	// console.log(tabs, tab.id);
+	state.tabs = state.tabs.map((tab_) => (tab_.id === tabId ? tab : tab_));
+	console.info('tab updated', tab);
 }
 
-function copenTabs(tabs) {
+function startPreviosSession(session) {
 	// remove all tabs within every windows 😈
 	chrome.tabs.query({}, (tabs) => {
-		tabs.forEach((tab) => chrome.tab.remove(tab.id));
+		tabs.forEach((tab) => chrome.tabs.remove(tab.id));
+		console.info('removed existing tabs', tabs);
 	});
 
-	tabs.forEach((tab) => {
+	state.tabs = session.tabs;
+	state.tabs.forEach((tab) => {
 		chrome.tabs.create({ url: tab.url });
 	});
+	console.info('created session tabs', state.tabs);
+}
+
+function startNewSession(session) {
+	// add every tab in current window to the
+	chrome.tabs.query({}, (tabs) => {
+		state.tabs = tabs;
+		console.info('added current tabs to session tabs', tabs);
+	});
+
+	state.sessions.push(session);
+}
+
+function detachCurrentSession() {
+	state.sessions.forEach((session) => {
+		if (session.name === state.currentSessionName) {
+			session.tabs = state.tabs;
+		}
+	});
+
+	chrome.storage.local.set({ sessions: state.sessions });
+	state.currentSessionName = null;
+	state.tabs = [];
+
+	// remove all tabs within every windows 😈
+	chrome.tabs.query({}, (tabs) => {
+		tabs.forEach((tab) => chrome.tabs.remove(tab.id));
+		console.info('removed existing tabs', tabs);
+	});
+
+	chrome.tabs.create({});
 }
 
 chrome.runtime.onMessage.addListener((action, req, callbackFn) => {
@@ -46,8 +81,8 @@ chrome.runtime.onMessage.addListener((action, req, callbackFn) => {
 				(session) => session.name === state.currentSessionName
 			);
 			thatSessionL.length === 0
-				? state.sessions.push({ name: state.currentSessionName })
-				: copenTabs(thatSessionL[0].tabs); // open tabs from that session
+				? startNewSession({ name: state.currentSessionName })
+				: startPreviosSession(thatSessionL[0]); // open tabs from that session
 
 			chrome.tabs.onCreated.addListener(appendCreatedTab);
 			chrome.tabs.onUpdated.addListener(updateTab);
@@ -58,18 +93,11 @@ chrome.runtime.onMessage.addListener((action, req, callbackFn) => {
 			break;
 
 		case 'DETACH_SESSION':
-			state.sessions.forEach((session) => {
-				if (session.name === state.currentSessionName) {
-					session.tabs = tabs;
-				}
-			});
-			console.log(state);
-			chrome.storage.sync.set({ sessions: state.sessions });
-			state.currentSessionName = null;
-
 			chrome.tabs.onCreated.removeListener(appendCreatedTab);
 			chrome.tabs.onUpdated.removeListener(updateTab);
 			chrome.tabs.onRemoved.removeListener(removeTab);
+
+			detachCurrentSession();
 
 			callbackFn(state);
 			break;
@@ -80,8 +108,4 @@ chrome.runtime.onMessage.addListener((action, req, callbackFn) => {
 		default:
 			break;
 	}
-	// chrome.tabs.getAllInWindow(null, (result) => {
-	// 	chrome.tabs.remove(result.map((tab) => tab.id));
-	// 	chrome.tabs.create({});
-	// });
 });
