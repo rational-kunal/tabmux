@@ -37,7 +37,7 @@ detachNode.style.display = 'none';
 
 // state is updated now run this thingy
 function updateUI() {
-	console.log(state);
+	console.info('state update', state);
 	if (state.currentSessionName === null) {
 		// there is no currenSession so user can opt to start the show
 		formNode.style.display = 'block';
@@ -58,9 +58,9 @@ function updateUI() {
 }
 
 function button(txt) {
-	const btnNode = document.createElement('button');
+	const btnNode = document.createElement('li');
 	btnNode.innerText = txt;
-
+	btnNode.className = 'list-group-item list-group-item-action';
 	btnNode.addEventListener('click', () => {
 		bgUpdateStateUI({
 			actionType: 'START_SESSION',
