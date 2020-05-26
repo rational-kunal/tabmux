@@ -1,0 +1,27 @@
+{
+	"name": "tabmux",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"dev": "parcel ./src/index.html ./src/background.js --public-url . --target node",
+		"prebuild": "rimraf dist",
+		"build": "parcel build ./src/index.html ./src/background.js --public-url . --target node"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/rational-kunal/tabmux.git"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/rational-kunal/tabmux/issues"
+	},
+	"homepage": "https://github.com/rational-kunal/tabmux#readme",
+	"devDependencies": {
+		"parcel-bundler": "^1.12.4",
+		"rimraf": "^3.0.2"
+	}
+}

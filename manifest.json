@@ -5,9 +5,9 @@
 	"permissions": ["tabs", "storage"],
 	"browser_action": {
 		"default_title": "you can also add a tool tip here",
-		"default_popup": "src/popup/index.html"
+		"default_popup": "dist/index.html"
 	},
 	"background": {
-		"scripts": ["src/background.js"]
+		"scripts": ["dist/background.js"]
 	}
 }
